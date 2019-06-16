@@ -6,19 +6,10 @@ import numpy as np
 
 def cutwords(wordlists, sfilename):
     result = []
-    # 严格限制标点符号
-    #strict_punctuation = '。，、＇：∶；?‘’“”〝〞ˆˇ﹕︰﹔﹖﹑·¨….¸;！´？！～—ˉ｜‖＂〃｀@﹫¡¿﹏﹋﹌︴々﹟#﹩$﹠&﹪%*﹡﹢﹦﹤‐￣¯―﹨ˆ˜﹍﹎+=<­­＿_-\ˇ~﹉﹊（）〈〉‹›﹛﹜『』〖〗［］《》〔〕{}「」【】︵︷︿︹︽_﹁﹃︻︶︸﹀︺︾ˉ﹂﹄︼'
-    # 简单限制标点符号
-    #simple_punctuation = '’!"#$%&\'()*+,-/:;<=>?@[\\]^_`{|}~'
-    # 去除标点符号
-    #punctuation = simple_punctuation + strict_punctuation
-
     meaningless_word = ['的', '了']
     useful_symbol = ['…', '!', '！', '~', '～', '？', '?', '...', '.']
 
     for wordlist in wordlists:
-        # seg_list = jieba.cut("我来到北京清华大学", cut_all=False)
-        # wordlist = re.sub('[{0}]+'.format(punctuation), '', wordlist.strip())
         words = jieba.cut(wordlist, cut_all=False)
         cur_result = []
         for word in words:
@@ -32,14 +23,9 @@ def cutwords(wordlists, sfilename):
             #            or ('A' <= w <= 'Z') or ('0' <= w <= '9') or (w in useful_symbol)):
             #        cflag = True
             #        break
-            #if cflag:
-            #    continue
+            #if cflag: continue
             cur_result.append(word)
         result.append(cur_result)
-    #with open(sfilename, 'w', encoding='utf-8') as w:
-    #    for words in result:
-    #        w.write(' '.join(words))
-    #        w.write('\n')
     return result
 
 
@@ -60,7 +46,7 @@ def feature_select(sentence, label):
     valword = []
     for i in Kmodel.get_support(indices=True):
         valword.append(feature_names[i])
-    return valword
+    return set(valword)
 
 
 def filter_valword(sentence, valword):
@@ -71,6 +57,5 @@ def filter_valword(sentence, valword):
             if word in valword:
                 cur.append(word)
         result.append(cur)
-        if i%1000 == 0:
-            print(i)
     return result
+

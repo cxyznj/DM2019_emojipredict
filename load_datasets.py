@@ -72,19 +72,15 @@ def load_words(train_text, test_text, train_label, trainfilename, testfilename, 
         train_words = preprocess.cutwords(train_text, sfilename=trainfilename)
         test_words = preprocess.cutwords(test_text, sfilename=testfilename)
         #valword = preprocess.feature_select(train_words, train_label) # 卡方检验后的最重要的特征
-        #valword = set(valword)
-        #print("开始最后筛选")
         #train_words = preprocess.filter_valword(train_words, valword)
         #test_words = preprocess.filter_valword(test_words, valword)
-        print("开始保存数据")
-        with open(trainfilename, 'w', encoding='utf-8') as w:
-            for words in train_words:
-                w.write(' '.join(words))
-                w.write('\n')
-        with open(testfilename, 'w', encoding='utf-8') as w:
-            for words in test_words:
-                w.write(' '.join(words))
-                w.write('\n')
+        def save_data(words, filename):
+            with open(filename, 'w', encoding='utf-8') as w:
+                for word in words:
+                    w.write(' '.join(word))
+                    w.write('\n')
+        save_data(train_words, trainfilename)
+        save_data(test_words, testfilename)
 
         def merge_cutwords(trainpath, testpath, spath):
             with open(trainpath, 'r', encoding='utf-8') as trainf, open(testpath, 'r', encoding='utf-8') as testf, open(
@@ -112,13 +108,6 @@ def load_wordmodel(model_path, train_path, size, window=5, min_count=1, workers 
 
 
 def load_feature(model, train_words, test_words, trainfilename, testfilename, featurefilename, dictfilename):
-    feature = []
-    fdict = {}
-
-    # train_feature/test_feature都是index
-    train_feature = []
-    test_feature = []
-
     if os.path.exists(featurefilename) and os.path.exists(dictfilename) and os.path.exists(trainfilename) and os.path.exists(testfilename):
         print("载入特征中...")
         feature = np.load(featurefilename, allow_pickle=True)
@@ -129,7 +118,11 @@ def load_feature(model, train_words, test_words, trainfilename, testfilename, fe
         test_feature = np.load(testfilename, allow_pickle=True)
     else:
         print("特征提取中...")
-        count = 0
+        feature = []
+        fdict = {}
+        train_feature = []
+        test_feature = []
+        count = 0 # 生成特征矩阵下标
         for line in train_words:
             cur_feature = []
             for word in line:
@@ -180,7 +173,3 @@ def save_result(filename, data):
             content[0] = i
             content[1] = data[i]
             csv_write.writerow(content)
-
-
-if __name__ == '__main__':
-    pass

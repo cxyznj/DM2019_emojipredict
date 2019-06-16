@@ -2,14 +2,15 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer, TfidfTransformer
 import os
 import numpy as np
+from sklearn.externals import joblib
 
 class MLP:
     def __init__(self):
-        self.clf = MLPClassifier(solver='adam', hidden_layer_sizes=(150, 150), batch_size=256, tol=1e-4,
-                                 learning_rate_init=1e-3, learning_rate='adaptive', alpha=5*1e-2,
+        self.clf = MLPClassifier(solver='adam', hidden_layer_sizes=(200, 200), batch_size=256, tol=1e-4,
+                                 learning_rate_init=5*1e-4, learning_rate='adaptive', alpha=1e-2,
                                 verbose=True, early_stopping=True, n_iter_no_change=5)
 
-    def train(self, features, train_feature, train_label, feature_len, train_word, fdict):
+    def train(self, features, train_feature, train_label, feature_len):
         # 数据预处理使得一个句子是一个加权平均后的一维向量
         prepath = "./preprocessed/mlptrain.data.npy"
         if os.path.exists(prepath):
@@ -56,6 +57,7 @@ class MLP:
             ave = [.0] * feature_len
             count = 0
             for wordidx in s:
+                #if wordidx == -1: continue
                 f = features[wordidx]
                 ave += f
                 count += 1
@@ -150,4 +152,23 @@ def bagging(clfs, features, test_feature, feature_len, weights):
                 maxnum = candipre[item]
                 maxidx = item
         result.append(maxidx)
+    return result
+
+def bagging_data(features, test_feature, feature_len):
+    clfs = []
+    clfs.append(joblib.load("./mlp/200.200.r5s1e-4.a1e-2.relu.ninc5.tol1e-4(0.180752).mlp"))
+    clfs.append(joblib.load("./mlp/300.300.r1e-3.a1e-2.relu.ninc5.tol1e-4(0.180266).mlp"))
+    clfs.append(joblib.load("./mlp/128.128.r5s1e-4.a1e-2.relu.ninc5.tol1e-4(0.179524).mlp"))
+    clfs.append(joblib.load("./mlp/256.256.r1e-3.a1e-2.relu.ninc5.tol1e-4(0.176790).mlp"))
+    clfs.append(joblib.load("./mlp/150.150.r5s1e-4.a1e-3.relu.ninc5.tol1e-4(0.177427).mlp"))
+    clfs.append(joblib.load("./mlp/400.300.r5s1e-4.a5s1e-3.relu.ninc5.tol1e-4(0.178505).mlp"))
+    clfs.append(joblib.load("./mlp/128.128.128.r5s1e-4.a1e-2.relu.ninc5.tol1e-4(0.177590).mlp"))
+    clfs.append(joblib.load("./mlp/512.512.r5s1e-4.a1e-3.relu.ninc5.tol1e-4(0.174079).mlp"))
+    clfs.append(joblib.load("./mlp/512.512.r1e-3.a1e-2.relu.ninc5.tol1e-4(0.173488).mlp"))
+    clfs.append(joblib.load("./mlp/150.150.r1e-3.a5s1e-2.relu.ninc5.tol1e-4(0.175029).mlp"))
+    weights = [0.180752, 0.180266, 0.179524, 0.176790, 0.177427, 0.178505, 0.177590, 0.174079, 0.173488, 0.175029]
+    result = bagging(clfs, features, test_feature, feature_len, weights)
+    #print("acc =", accuracy_score(result, train_label[:valid_size]))
+    #print("f1 =", f1_score(result, train_label[:valid_size], average='micro'))
+
     return result
