@@ -6,17 +6,17 @@ import numpy as np
 
 def cutwords(wordlists, sfilename):
     result = []
-    meaningless_word = ['的', '了']
+    meaningless_word = ['的', '了', '你', '我', '他', '这', '那', '个']
     useful_symbol = ['…', '!', '！', '~', '～', '？', '?', '...', '.']
 
     for wordlist in wordlists:
         words = jieba.cut(wordlist, cut_all=False)
         cur_result = []
         for word in words:
-            if word == ' ':
-                continue
-            #if word in meaningless_word:
+            #if word == ' ':
             #    continue
+            if word in meaningless_word:
+                continue
             #cflag = False
             #for w in word:
             #    if not (('\u4e00' <= w <= '\u9fff') or ('a' <= w <= 'z')

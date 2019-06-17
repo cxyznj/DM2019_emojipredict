@@ -32,9 +32,9 @@ result_path = "./result/result.csv"
 
 svmtrain_path = "./svm/trainfeature.npy"
 svmtest_path = "./svm/testfeature.npy"
-svmmodel_path = "./svm/model_0.svm"
+svmmodel_path = "./svm/model_4.svm"
 
-mlpmodel_path = "./mlp/model0.mlp"
+mlpmodel_path = "./mlp/model1.mlp"
 
 feature_len = 256
 sentence_len = 32
@@ -53,48 +53,32 @@ if __name__ == '__main__':
     wordmodel = load_datasets.load_wordmodel(model_path=wordmodel_path, train_path=ttwords_path, size=feature_len)
     # train_feature/test_feature是特征矩阵features中特征的下标，其中每一条特征对应一个字,fdict是字到特征下标的字典映射
     train_feature, test_feature, features, fdict = load_datasets.load_feature(wordmodel, train_words, test_words, trainfeature_path, testfeature_path, feature_path, featuredict_path)
-    # embedding之后
-    #features = list(features)
-    #features.append([.0]*feature_len)
-    #features = np.array(features)
 
     # 回收空间
     del (train_text)
     del (test_text)
-    del (train_words)
-    del (test_words)
     gc.collect()
 
-    result = MLP.bagging_data(features, test_feature, feature_len)
     # MLP method
-    #if os.path.exists(mlpmodel_path):
-    #    print("载入MLP模型中...")
-    #    clf = joblib.load(mlpmodel_path)  # 载入模型
-    #else:
-    #    print("训练MLP模型中...")
-    #    clf = MLP.MLP()
-    #    clf.train(features, train_feature, train_label, feature_len)
-    #    joblib.dump(clf, mlpmodel_path)  # 保存模型
+    #result = MLP.bagging_data(features, test_feature, feature_len)
+    if os.path.exists(mlpmodel_path):
+        print("载入MLP模型中...")
+        clf = joblib.load(mlpmodel_path)  # 载入模型
+    else:
+        print("训练MLP模型中...")
+        clf = MLP.MLP()
+        clf.train(features, train_feature, train_label, feature_len)
+        joblib.dump(clf, mlpmodel_path)  # 保存模型
 
-    #result = clf.predict(features, test_feature, feature_len)
+    result = clf.predict(features, test_feature, feature_len)
     load_datasets.save_result(result_path, result)
 
-    # 约10%为验证集，其他为训练集
-    #valid_size = 128000
-    #valid_feature = train_feature[:valid_size]
-    #valid_label = train_label[:valid_size]
-    #train_feature = train_feature[valid_size:]
-    #train_label = train_label[valid_size:]
-
-    # SVM method(failed)
+    # SVM method
     '''
-    train_feature = SVM.genfeature(features, train_feature, feature_len, svmtrain_path)
+    print("提取SVM特征中...")
+    train_feature, test_feature = SVM.getfeature(train_words, test_words, train_label)
     train_label = np.array(train_label)
 
-    valid_feature = SVM.genfeature(features, valid_feature, feature_len, svmtest_path)
-    valid_label = np.array(valid_label)
-
-    # SVM method
     if os.path.exists(svmmodel_path):
         print("载入SVM模型中...")
         clf = joblib.load(svmmodel_path)  # 载入模型
@@ -106,11 +90,24 @@ if __name__ == '__main__':
         print("SVM模型训练完毕!")
         joblib.dump(clf, svmmodel_path) # 保存模型
 
-    result = clf.score(valid_feature, valid_label)
-    print("验证集上的平均准确率为: %.6f" % result)
+    result = clf.predict(test_feature)
+    load_datasets.save_result(result_path, result)
     '''
+
     # CNN method
     '''
+    # 设置约10%为验证集，其他为训练集
+    valid_size = 128000
+    valid_feature = train_feature[:valid_size]
+    valid_label = train_label[:valid_size]
+    train_feature = train_feature[valid_size:]
+    train_label = train_label[valid_size:]
+    
+    # CNN embedding方法
+    #features = list(features)
+    #features.append([.0]*feature_len)
+    #features = np.array(features)
+    
     epoch = 1
     CNNmodel = Model.model(features, enum=epoch)
     if os.path.exists(cnnmodel_path):

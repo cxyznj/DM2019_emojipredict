@@ -6,7 +6,7 @@ from sklearn.externals import joblib
 
 class MLP:
     def __init__(self):
-        self.clf = MLPClassifier(solver='adam', hidden_layer_sizes=(200, 200), batch_size=256, tol=1e-4,
+        self.clf = MLPClassifier(solver='adam', hidden_layer_sizes=(100, 100), batch_size=256, tol=1e-4,
                                  learning_rate_init=5*1e-4, learning_rate='adaptive', alpha=1e-2,
                                 verbose=True, early_stopping=True, n_iter_no_change=5)
 
@@ -85,6 +85,7 @@ class MLP:
         print("开始加权")
         result = []
         errcount = 0
+        allcount = 0
         # s是一个句子的各词的idx列表
         for i, s in enumerate(t_feature):
             ave = [.0] * feature_len
@@ -92,13 +93,13 @@ class MLP:
             weight = []
             count = 0
             for wordidx in s:
+                allcount += 1
                 try:
                     word = fdict[wordidx]
                     tfidx = word_tfidx[word]
                     tfval = tfidf_matrix[i, tfidx]
                     weight.append(tfval)
-                    f = features[wordidx]
-                    w2v.append(f)
+                    w2v.append(features[wordidx])
                     count += 1
                 except:
                     errcount += 1
@@ -108,9 +109,7 @@ class MLP:
             for j in range(count):
                 ave += (weight[j]/s) * w2v[j]
             result.append(ave)
-            if i%10000 == 0:
-                print(i)
-        print("err = %d" %errcount)
+        print("err = %.6f" %(errcount/allcount))
         return result
 
 
