@@ -131,14 +131,14 @@ class model():
         return y
 
 
-    def save_model(self, path = 'model/cnn.pth'):
+    def save_model(self, path = 'cnnmodel/cnn.pth'):
         torch.save(self.model.state_dict(), path)  # 保存模型
 
 
-    def load_model(self, path = 'model/cnn.pth'):
+    def load_model(self, path = 'cnnmodel/cnn.pth'):
         self.model.load_state_dict(torch.load(path))
 
-def train(model, features, train_feature, train_label, sentence_len, feature_len, batch_size=64, cnnmodelpath='./model/cnn.pth'):
+def train(model, features, train_feature, train_label, sentence_len, feature_len, batch_size=64, cnnmodelpath='./cnnmodel/cnn.pth'):
     k = int(len(train_feature) / batch_size)
     loss = .0
     acc = .0

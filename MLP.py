@@ -6,11 +6,11 @@ from sklearn.externals import joblib
 
 class MLP:
     def __init__(self):
-        self.clf = MLPClassifier(solver='adam', hidden_layer_sizes=(100, 100), batch_size=256, tol=1e-4,
-                                 learning_rate_init=5*1e-4, learning_rate='adaptive', alpha=1e-2,
+        self.clf = MLPClassifier(solver='adam', hidden_layer_sizes=(256, 256), batch_size=256, tol=1e-4,
+                                 learning_rate_init=1e-3, learning_rate='adaptive', alpha=1e-3,
                                 verbose=True, early_stopping=True, n_iter_no_change=5)
 
-    def train(self, features, train_feature, train_label, feature_len):
+    def train(self, features, train_feature, train_label, feature_len, train_words, fdict):
         # 数据预处理使得一个句子是一个加权平均后的一维向量
         prepath = "./preprocessed/mlptrain.data.npy"
         if os.path.exists(prepath):
@@ -18,19 +18,21 @@ class MLP:
             train_feature = np.load(prepath)
         else:
             print("处理mlp数据中...")
+            #train_feature = self.weight_preprocess(features, train_feature, feature_len, train_words, fdict)
             train_feature = self.preprocess(features, train_feature, feature_len)
             train_feature = np.array(train_feature)
             np.save(prepath, train_feature)
         self.clf.fit(train_feature, train_label)
 
 
-    def predict(self, features, test_feature, feature_len):
+    def predict(self, features, test_feature, feature_len, train_words, fdict):
         prepath = "./preprocessed/mlptest.data.npy"
         if os.path.exists(prepath):
             print("载入mlp数据中...")
             test_feature = np.load(prepath)
         else:
             print("处理mlp数据中...")
+            #test_feature = self.weight_preprocess(features, test_feature, feature_len, train_words, fdict)
             test_feature = self.preprocess(features, test_feature, feature_len)
             test_feature = np.array(test_feature)
             np.save(prepath, test_feature)
@@ -91,23 +93,30 @@ class MLP:
             ave = [.0] * feature_len
             w2v = []
             weight = []
-            count = 0
+            count = 0 # 总字数
+            vcount = 0 # 有效字数
             for wordidx in s:
                 allcount += 1
+                count += 1
+                w2v.append(features[wordidx])
                 try:
                     word = fdict[wordidx]
                     tfidx = word_tfidx[word]
                     tfval = tfidf_matrix[i, tfidx]
                     weight.append(tfval)
-                    w2v.append(features[wordidx])
-                    count += 1
+                    vcount += 1
                 except:
                     errcount += 1
+                    weight.append(.0)
                     continue
+            vpercent = vcount/count # 有效率
             # 开始加权平均
             s = sum(weight)
             for j in range(count):
-                ave += (weight[j]/s) * w2v[j]
+                if weight[j] != .0:
+                    ave += (weight[j]/s) * w2v[j] * vpercent
+                else:
+                    ave += (1/count) * w2v[j]
             result.append(ave)
         print("err = %.6f" %(errcount/allcount))
         return result
@@ -155,16 +164,16 @@ def bagging(clfs, features, test_feature, feature_len, weights):
 
 def bagging_data(features, test_feature, feature_len):
     clfs = []
-    clfs.append(joblib.load("./mlp/200.200.r5s1e-4.a1e-2.relu.ninc5.tol1e-4(0.180752).mlp"))
-    clfs.append(joblib.load("./mlp/300.300.r1e-3.a1e-2.relu.ninc5.tol1e-4(0.180266).mlp"))
-    clfs.append(joblib.load("./mlp/128.128.r5s1e-4.a1e-2.relu.ninc5.tol1e-4(0.179524).mlp"))
-    clfs.append(joblib.load("./mlp/256.256.r1e-3.a1e-2.relu.ninc5.tol1e-4(0.176790).mlp"))
-    clfs.append(joblib.load("./mlp/150.150.r5s1e-4.a1e-3.relu.ninc5.tol1e-4(0.177427).mlp"))
-    clfs.append(joblib.load("./mlp/400.300.r5s1e-4.a5s1e-3.relu.ninc5.tol1e-4(0.178505).mlp"))
-    clfs.append(joblib.load("./mlp/128.128.128.r5s1e-4.a1e-2.relu.ninc5.tol1e-4(0.177590).mlp"))
-    clfs.append(joblib.load("./mlp/512.512.r5s1e-4.a1e-3.relu.ninc5.tol1e-4(0.174079).mlp"))
-    clfs.append(joblib.load("./mlp/512.512.r1e-3.a1e-2.relu.ninc5.tol1e-4(0.173488).mlp"))
-    clfs.append(joblib.load("./mlp/150.150.r1e-3.a5s1e-2.relu.ninc5.tol1e-4(0.175029).mlp"))
+    clfs.append(joblib.load("./mlpmodel/200.200.r5s1e-4.a1e-2.relu.ninc5.tol1e-4(0.180752).mlp"))
+    clfs.append(joblib.load("./mlpmodel/300.300.r1e-3.a1e-2.relu.ninc5.tol1e-4(0.180266).mlp"))
+    clfs.append(joblib.load("./mlpmodel/128.128.r5s1e-4.a1e-2.relu.ninc5.tol1e-4(0.179524).mlp"))
+    clfs.append(joblib.load("./mlpmodel/256.256.r1e-3.a1e-2.relu.ninc5.tol1e-4(0.176790).mlp"))
+    clfs.append(joblib.load("./mlpmodel/150.150.r5s1e-4.a1e-3.relu.ninc5.tol1e-4(0.177427).mlp"))
+    clfs.append(joblib.load("./mlpmodel/400.300.r5s1e-4.a5s1e-3.relu.ninc5.tol1e-4(0.178505).mlp"))
+    clfs.append(joblib.load("./mlpmodel/128.128.128.r5s1e-4.a1e-2.relu.ninc5.tol1e-4(0.177590).mlp"))
+    clfs.append(joblib.load("./mlpmodel/512.512.r5s1e-4.a1e-3.relu.ninc5.tol1e-4(0.174079).mlp"))
+    clfs.append(joblib.load("./mlpmodel/512.512.r1e-3.a1e-2.relu.ninc5.tol1e-4(0.173488).mlp"))
+    clfs.append(joblib.load("./mlpmodel/150.150.r1e-3.a5s1e-2.relu.ninc5.tol1e-4(0.175029).mlp"))
     weights = [0.180752, 0.180266, 0.179524, 0.176790, 0.177427, 0.178505, 0.177590, 0.174079, 0.173488, 0.175029]
     result = bagging(clfs, features, test_feature, feature_len, weights)
     #print("acc =", accuracy_score(result, train_label[:valid_size]))

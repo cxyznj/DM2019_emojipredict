@@ -13,10 +13,10 @@ def cutwords(wordlists, sfilename):
         words = jieba.cut(wordlist, cut_all=False)
         cur_result = []
         for word in words:
-            #if word == ' ':
-            #    continue
-            if word in meaningless_word:
+            if word == ' ':
                 continue
+            #if word in meaningless_word:
+            #    continue
             #cflag = False
             #for w in word:
             #    if not (('\u4e00' <= w <= '\u9fff') or ('a' <= w <= 'z')

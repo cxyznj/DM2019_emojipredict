@@ -27,20 +27,18 @@ testfeature_path = "./preprocessed/testfeature.npy"
 feature_path = "./preprocessed/feature.npy"
 featuredict_path = "./preprocessed/feature.dict"
 
-cnnmodel_path = "./model/cnn.pth"
+cnnmodel_path = "./cnnmodel/cnn.pth"
 result_path = "./result/result.csv"
 
-svmtrain_path = "./svm/trainfeature.npy"
-svmtest_path = "./svm/testfeature.npy"
-svmmodel_path = "./svm/model_4.svm"
+svmtrain_path = "./svmmodel/trainfeature.npy"
+svmtest_path = "./svmmodel/testfeature.npy"
+svmmodel_path = "./svmmodel/model_0.svm"
 
-mlpmodel_path = "./mlp/model1.mlp"
+mlpmodel_path = "./mlpmodel/model_0.mlp"
 
 feature_len = 256
 sentence_len = 32
 
-# filter=[2:128, 3:128, 4:128, 5:128], feature_len=512, acc=0.142187
-# filter=[3:128, 4:128, 5:128], feature_len=512, acc=0.147016
 
 if __name__ == '__main__':
     # train_text/test_text是原始文本，train_label是数值化后的标签
@@ -61,17 +59,21 @@ if __name__ == '__main__':
 
     # MLP method
     #result = MLP.bagging_data(features, test_feature, feature_len)
+    reverdict = {}
+    for item in fdict:
+        reverdict[fdict[item]] = item
+
     if os.path.exists(mlpmodel_path):
         print("载入MLP模型中...")
         clf = joblib.load(mlpmodel_path)  # 载入模型
     else:
         print("训练MLP模型中...")
         clf = MLP.MLP()
-        clf.train(features, train_feature, train_label, feature_len)
+        clf.train(features, train_feature, train_label, feature_len, train_words, reverdict)
         joblib.dump(clf, mlpmodel_path)  # 保存模型
 
-    result = clf.predict(features, test_feature, feature_len)
-    load_datasets.save_result(result_path, result)
+    #result = clf.predict(features, test_feature, feature_len, test_words, reverdict)
+    #load_datasets.save_result(result_path, result)
 
     # SVM method
     '''
